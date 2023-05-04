@@ -1,0 +1,22 @@
+---
+title: "week3_exercise"
+author: "Aiyana Signer"
+date: "2023-05-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Task 1: Segmentation
+
+## Task 2: Specify and apply threshold d
+
+## Task 3: Visualize segmented trajectories
+
+## Task 4: Segment-based analysis
+
+## Task 5: Similarity measures
+
+## Task 6: Caluclate similarity
