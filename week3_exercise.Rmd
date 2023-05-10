@@ -96,8 +96,14 @@ posmo_filter <- posmo_filter %>%
     mutate(static = stepMean < mean(stepMean, na.rm = TRUE))
 ```
 
-
 ## Task 3: Visualize segmented trajectories
+```{r}
+ggplot(posmo_filter, aes(X, Y, color = static)) + 
+  geom_point()+
+  geom_path() + 
+  coord_equal()
+```
+
 
 ## Task 4: Segment-based analysis
 
