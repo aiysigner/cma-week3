@@ -170,5 +170,24 @@ posmo_filter_nonstatic_longseg %>%
 ```
 
 ## Task 5: Similarity measures
+```{r}
+# import data
+ped <- read_delim("data/pedestrian.csv", ",")
 
-## Task 6: Caluclate similarity
+head(ped)
+```
+
+```{r}
+# visualize pedestrian data
+ggplot(ped, aes(x = E, y = N, color = factor(TrajID))) +
+  geom_point() + 
+  geom_path() +
+  labs(title = "Visual comparison of the 6 trajectories", x = "E", y = "N", color = "Trajectory ID") +
+  facet_wrap(~ TrajID) # create one subplot per trajectory
+  
+```
+
+
+## Task 6: Calculate similarity
+
+Before visualizing your results think about the following: Which two trajectories to you perceive to be most similar, which are most dissimilar?
