@@ -104,8 +104,70 @@ ggplot(posmo_filter, aes(X, Y, color = static)) +
   coord_equal()
 ```
 
-
 ## Task 4: Segment-based analysis
+
+```{r}
+# only keep certain columns
+posmo_filter <- select(posmo_filter, datetime, X, Y, geometry, static, segment_id)
+
+# define unique ID function
+rle_id <- function(vec) {
+    x <- rle(vec)$lengths
+    as.factor(rep(seq_along(x), times = x))
+}
+
+# apply rle_id function
+posmo_filter <- posmo_filter |>
+    mutate(segment_id = rle_id(static))
+
+head(posmo_filter)
+```
+
+```{r}
+# filter out static trajectories
+posmo_filter_nonstatic <- posmo_filter %>%
+    filter(!static)
+posmo_filter_nonstatic %>%
+  ggplot(aes(X, Y, color = segment_id)) +
+  geom_path() +
+  geom_point() +
+  coord_equal()+
+  theme_minimal()+
+  theme(legend.position = "none")+ # do not show legend
+  ggtitle("All segments (uncleaned)")
+
+# remove short segments
+# calculate time difference between two fixes
+posmo_filter_nonstatic <- posmo_filter_nonstatic |> 
+  mutate(
+    timediff_s = as.numeric(lead(datetime, 1)-datetime)
+  )
+
+# calculate total time difference per segment
+posmo_filter_nonstatic <- posmo_filter_nonstatic |> 
+  group_by(segment_id) |> 
+  mutate(
+    segmenttime_s = sum(timediff_s)
+  ) |> 
+  ungroup()
+
+# set time threshold
+time_threshold <- 60*5 #convert 5 minutes to seconds
+
+posmo_filter_nonstatic_longseg <- posmo_filter_nonstatic |> 
+  filter(!segmenttime_s < time_threshold) # removes rows where total segment time less than 5 minutes
+```
+
+```{r}
+# visualize without short segments (duration less than 5 minutes)
+posmo_filter_nonstatic_longseg %>%
+  ggplot(aes(X, Y, color = segment_id)) +
+  geom_path() +
+  geom_point() +
+  coord_equal()+
+  theme_minimal()+
+  ggtitle("Long segments (removed segments < 5 minutes)")
+```
 
 ## Task 5: Similarity measures
 
