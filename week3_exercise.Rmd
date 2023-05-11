@@ -14,6 +14,7 @@ library("readr")
 library(ggplot2)
 library(tidyverse)
 library("sf") 
+library(SimilarityMeasures)
 ```
 
 ## Prepare Data
@@ -107,9 +108,6 @@ ggplot(posmo_filter, aes(X, Y, color = static)) +
 ## Task 4: Segment-based analysis
 
 ```{r}
-# only keep certain columns
-posmo_filter <- select(posmo_filter, datetime, X, Y, geometry, static, segment_id)
-
 # define unique ID function
 rle_id <- function(vec) {
     x <- rle(vec)$lengths
@@ -119,6 +117,9 @@ rle_id <- function(vec) {
 # apply rle_id function
 posmo_filter <- posmo_filter |>
     mutate(segment_id = rle_id(static))
+
+# only keep certain columns
+posmo_filter <- select(posmo_filter, datetime, X, Y, geometry, static, segment_id)
 
 head(posmo_filter)
 ```
@@ -183,7 +184,8 @@ ggplot(ped, aes(x = E, y = N, color = factor(TrajID))) +
   geom_point() + 
   geom_path() +
   labs(title = "Visual comparison of the 6 trajectories", x = "E", y = "N", color = "Trajectory ID") +
-  facet_wrap(~ TrajID) # create one subplot per trajectory
+  facet_wrap(~ TrajID) # create one subplot per trajectory +
+  coord_equal()
   
 ```
 
@@ -191,3 +193,37 @@ ggplot(ped, aes(x = E, y = N, color = factor(TrajID))) +
 ## Task 6: Calculate similarity
 
 Before visualizing your results think about the following: Which two trajectories to you perceive to be most similar, which are most dissimilar?
+
+Based on the shape, trajectories 1,2, 3 and 6 seem rather similar, while Trajectory 4 and 5 stand out as being different. If one also takes into account the spacing between the points, then Trajectory 1 and 6 are quite similar.
+
+```{r}
+# create a list of data frames for each trajectory
+traj_list <- split(ped, ped$TrajID)
+
+# convert each data frame to a matrix
+traj_mat_list <- lapply(traj_list, function(x) as.matrix(x[, c("E", "N")]))
+
+# compute the similarity metric between trajectory 1 and trajectories 2 to 6
+similarity_DTW <- sapply(traj_mat_list[-1], function(traj) DTW(traj_mat_list[[1]], traj))
+similarity_EditDist <- sapply(traj_mat_list[-1], function(traj) EditDist(traj_mat_list[[1]], traj))
+similarity_Frechet  <- sapply(traj_mat_list[-1], function(traj) Frechet(traj_mat_list[[1]], traj))
+similarity_LCSS <- sapply(traj_mat_list[-1], function(traj) {LCSS(traj_mat_list[[1]], traj, pointSpacing = 100, pointDistance = 100, errorMarg = 0.5)})
+
+# turn results into data frames
+df_DTW <- data.frame(Trajectory = names(similarity_DTW), Similarity = similarity_DTW, Measure = "DTW")
+df_EditDist <- data.frame(Trajectory = names(similarity_EditDist), Similarity = similarity_EditDist, Measure = "EditDist")
+df_Frechet <- data.frame(Trajectory = names(similarity_Frechet), Similarity = similarity_Frechet, Measure = "Frechet")
+df_LCSS <- data.frame(Trajectory = names(similarity_LCSS), Similarity = similarity_LCSS, Measure = "LCSS")
+
+# merge data frames
+df_similarities <- bind_rows(df_DTW, df_EditDist, df_Frechet, df_LCSS)
+
+# plot
+ggplot(df_similarities, aes(x = Trajectory, y = Similarity, fill = Trajectory)) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(~ Measure, scales = "free") +
+  labs(x = "Trajectory", y = "Similarity", title = "Computed Similarities using different measures between Trajectory 1 to all other Trajectories") +
+  theme(legend.position = "none")
+```
+
+
