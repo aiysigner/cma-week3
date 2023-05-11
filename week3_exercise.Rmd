@@ -207,7 +207,7 @@ traj_mat_list <- lapply(traj_list, function(x) as.matrix(x[, c("E", "N")]))
 similarity_DTW <- sapply(traj_mat_list[-1], function(traj) DTW(traj_mat_list[[1]], traj))
 similarity_EditDist <- sapply(traj_mat_list[-1], function(traj) EditDist(traj_mat_list[[1]], traj))
 similarity_Frechet  <- sapply(traj_mat_list[-1], function(traj) Frechet(traj_mat_list[[1]], traj))
-similarity_LCSS <- sapply(traj_mat_list[-1], function(traj) {LCSS(traj_mat_list[[1]], traj, pointSpacing = 100, pointDistance = 100, errorMarg = 0.5)})
+similarity_LCSS <- sapply(traj_mat_list[-1], function(traj) {LCSS(traj_mat_list[[1]], traj, pointSpacing = 10, pointDistance = 10, errorMarg = 0.5)})
 
 # turn results into data frames
 df_DTW <- data.frame(Trajectory = names(similarity_DTW), Similarity = similarity_DTW, Measure = "DTW")
